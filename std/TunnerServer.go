@@ -1,4 +1,4 @@
-package main
+package std
 
 import (
 	"bytes"
@@ -11,7 +11,7 @@ import (
 type TunnelServer struct {
 }
 
-func (server *TunnelServer) forwardToTarget(client net.Conn) {
+func (server *TunnelServer) ForwardToTarget(client net.Conn) {
 	r := make([]byte, 1)
 	r[0] = 1
 

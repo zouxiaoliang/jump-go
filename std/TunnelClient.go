@@ -1,4 +1,4 @@
-package main
+package std
 
 import (
 	"encoding/binary"
@@ -16,7 +16,7 @@ func NewTunnelClient(tunnel string, target string) *TunnelClient {
 	return &TunnelClient{tunnel, target}
 }
 
-func (t *TunnelClient) forwardToTunnel(client net.Conn) {
+func (t *TunnelClient) ForwardToTunnel(client net.Conn) {
 	target := Target{"tcp", t.target}
 	s, e := json.Marshal(target)
 	if e != nil {
