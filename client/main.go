@@ -9,18 +9,17 @@ import (
 	"os"
 	"sync"
 
-	"github.com/zouxiaoliang/jump/std"
+	std "github.com/zouxiaoliang/jump/std/tcp"
 )
 
 var (
-	config string
-
+	config     string
 	tunnelAddr string
-
 	localAddr  string
 	remoteAddr string
-
-	help bool
+	key        string
+	v          uint
+	help       bool
 )
 
 func init() {
@@ -32,16 +31,23 @@ func init() {
 	flag.StringVar(&localAddr, "local", "", "local address, example: 127.0.0.1:1234")
 	flag.StringVar(&remoteAddr, "remote", "", "remote address, example: 127.0.0.1:1234")
 	flag.StringVar(&config, "config", dirname+"/.config/jump.json", "configure file path.")
+	flag.StringVar(&key, "key", "", "crypt key")
+	flag.UintVar(&v, "version", 1, "protocol version")
 
 	flag.BoolVar(&help, "h", false, "print this message")
 }
 
-func parseConfig() *Config {
-	if config == "" && (tunnelAddr == "" || localAddr == "" || remoteAddr == "") {
-		fmt.Printf("tunnel: %v, local: %v, remote: %v, config: %v\n", tunnelAddr, localAddr, remoteAddr, config)
-		return nil
-	}
+func isFlagPassed(name string) bool {
+	found := false
+	flag.Visit(func(f *flag.Flag) {
+		if f.Name == name {
+			found = true
+		}
+	})
+	return found
+}
 
+func parseConfig() *Config {
 	var c Config
 	if config != "" {
 		content, err := os.ReadFile(config)
@@ -55,9 +61,26 @@ func parseConfig() *Config {
 			log.Fatalf("Error when unmarshal json, what: %v\n", err)
 			return nil
 		}
-	} else {
-		c.Tunnel = tunnelAddr
-		c.Forwardings = append(c.Forwardings, Forwardings{localAddr, remoteAddr})
+	}
+
+	if !isFlagPassed("tunnel") {
+		tunnelAddr = c.Tunnel
+	}
+	if isFlagPassed("local") && isFlagPassed("remote") {
+		c.Forwardings = []Forwarding{{Local: localAddr, Remote: remoteAddr}}
+	}
+
+	if !isFlagPassed("version") {
+		v = c.Version
+	}
+
+	if !isFlagPassed("key") {
+		key = c.Key
+	}
+
+	if tunnelAddr == "" {
+		fmt.Printf("tunnel address error. tunnel: %v\n", tunnelAddr)
+		return nil
 	}
 
 	return &c
@@ -86,7 +109,12 @@ func forward(tunnel string, local string, remote string) {
 		}
 		log.Printf("new client {%v}", client.RemoteAddr().String())
 
-		var tunnelClient = std.NewTunnelClient(tunnel, remote)
+		var tunnelClient *std.TcpTunnelClient
+		if v == 1 {
+			tunnelClient = std.NewTcpTunnelClient(tunnel, remote, key)
+		} else {
+			tunnelClient = std.NewTcpTunnelClientV2(tunnel, remote, key)
+		}
 		tunnelClient.ForwardToTunnel(client)
 	}
 }

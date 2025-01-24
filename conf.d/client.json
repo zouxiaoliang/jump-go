@@ -1,0 +1,11 @@
+{
+    "tunnel": "127.0.0.1:12345",
+    "forwardings": [
+        {
+            "local": "127.0.0.1:21434",
+            "remote": "127.0.0.1:11434"
+        }
+    ],
+    "version": 2,
+    "key": "fFa2dhdqBHZKpg61JsAX"
+}

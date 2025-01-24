@@ -1,11 +1,13 @@
 package main
 
-type Forwardings struct {
+type Forwarding struct {
 	Local  string `json:"local"`
 	Remote string `json:"remote"`
 }
 
 type Config struct {
-	Tunnel      string        `json:"tunnel"`
-	Forwardings []Forwardings `json:"forwardings"`
+	Version     uint         `json:"version"`
+	Tunnel      string       `json:"tunnel"`
+	Key         string       `json:"key"`
+	Forwardings []Forwarding `json:"forwardings"`
 }
